@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"log"
 
-	_ "github.com/denisenkom/go-mssqldb" // Драйвер для SQL Server
+	_ "github.com/denisenkom/go-mssqldb"
 )
 
 var DB *sql.DB

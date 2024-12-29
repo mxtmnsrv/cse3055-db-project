@@ -10,11 +10,11 @@ import (
 )
 
 func main() {
-	// Подключение к базе данных
+	// Database Connection
 	connString := "server=localhost;user id=your_user;password=your_password;database=ConstructionStoreDB"
 	db.InitDB(connString)
 
-	// Настройка маршрутов
+	// Setting up routes
 	router := mux.NewRouter()
 
 	router.HandleFunc("/customers", GetCustomers).Methods("GET")
