@@ -1,7 +1,7 @@
 package main
 
 import (
-	"construction-store/db"
+	"dbs-term-project/db"
 	"fmt"
 	"log"
 	"net/http"
