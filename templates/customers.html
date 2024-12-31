@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customers</title>
+</head>
+<body>
+    <h1>All Customers</h1>
+    <table border="1">
+        <tr>
+            <th>Customer ID</th>
+            <th>Phone Number</th>
+            <th>Email Address</th>
+            <th>Customer Type</th>
+            <th>Details</th>
+        </tr>
+        {{range .}}
+        <tr>
+            <td>{{.CustomerID}}</td>
+            <td>{{.PhoneNumber}}</td>
+            <td>{{.EmailAddress}}</td>
+            <td>{{.CustomerType}}</td>
+            <td>{{.Details}}</td>
+        </tr>
+        {{end}}
+    </table>
+    <a href="/addCustomer"><button>Add New Customer</button></a>
+</body>
+</html>

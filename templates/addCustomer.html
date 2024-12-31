@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Customer</title>
+    <script>
+        function toggleFields() {
+            const customerType = document.querySelector('input[name="customerType"]:checked').value;
+            document.getElementById('individualFields').style.display = customerType === 'Individual' ? 'block' : 'none';
+            document.getElementById('corporateFields').style.display = customerType === 'Corporate' ? 'block' : 'none';
+        }
+    </script>
+</head>
+<body>
+    <h1>Add Customer</h1>
+    <form action="/addCustomer" method="POST">
+        <label for="customerID">Customer ID:</label>
+        <input type="text" id="customerID" name="customerID" required>
+        <br>
+        <label for="phoneNumber">Phone Number:</label>
+        <input type="text" id="phoneNumber" name="phoneNumber" required>
+        <br>
+        <label for="emailAddress">Email Address:</label>
+        <input type="email" id="emailAddress" name="emailAddress" required>
+        <br>
+        <label>Customer Type:</label>
+        <input type="radio" name="customerType" value="Individual" onclick="toggleFields()" required> Individual
+        <input type="radio" name="customerType" value="Corporate" onclick="toggleFields()"> Corporate
+        <br>
+
+        <!-- Individual Fields -->
+        <div id="individualFields" style="display:none;">
+            <label for="nationalID">National ID:</label>
+            <input type="text" id="nationalID" name="nationalID">
+            <br>
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name">
+            <br>
+            <label for="dob">Date of Birth:</label>
+            <input type="date" id="dob" name="dob">
+        </div>
+
+        <!-- Corporate Fields -->
+        <div id="corporateFields" style="display:none;">
+            <label for="companyName">Company Name:</label>
+            <input type="text" id="companyName" name="companyName">
+            <br>
+            <label for="taxNumber">Tax Number:</label>
+            <input type="text" id="taxNumber" name="taxNumber">
+        </div>
+
+        <button type="submit">Add Customer</button>
+    </form>
+</body>
+</html>
