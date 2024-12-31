@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Order</title>
+</head>
+<body>
+    <h1>Add Order</h1>
+    <form method="POST" action="/addOrder">
+        <label for="orderDate">Order Date:</label>
+        <input type="date" id="orderDate" name="orderDate" required><br><br>
+
+        <label for="orderNote">Order Note:</label>
+        <textarea id="orderNote" name="orderNote"></textarea><br><br>
+
+        <label for="customerID">Customer:</label>
+        <select id="customerID" name="customerID" required>
+            {{range .}}
+            <option value="{{.CustomerID}}">{{.CustomerID}}</option>
+            {{end}}
+        </select><br><br>
+
+        <button type="submit">Add Order</button>
+    </form>
+</body>
+</html>
