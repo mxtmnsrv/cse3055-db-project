@@ -2,6 +2,25 @@
 <html>
 <head>
     <title>Create Order</title>
+    <script>
+        function togglePaymentFields() {
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+
+            // Hide all payment fields
+            document.getElementById('cashFields').style.display = 'none';
+            document.getElementById('creditCardFields').style.display = 'none';
+            document.getElementById('checkFields').style.display = 'none';
+
+            // Show the selected payment method fields
+            if (paymentMethod === 'Cash') {
+                document.getElementById('cashFields').style.display = 'block';
+            } else if (paymentMethod === 'CreditCard') {
+                document.getElementById('creditCardFields').style.display = 'block';
+            } else if (paymentMethod === 'Check') {
+                document.getElementById('checkFields').style.display = 'block';
+            }
+        }
+    </script>
 </head>
 <body>
     <h1>Create Order</h1>
@@ -19,59 +38,48 @@
         <br>
 
         <label>Payment Method:</label>
-        <input type="radio" name="paymentMethod" value="Cash" required> Cash
-        <input type="radio" name="paymentMethod" value="CreditCard"> Credit Card
-        <input type="radio" name="paymentMethod" value="Check"> Check
+        <input type="radio" name="paymentMethod" value="Cash" onclick="togglePaymentFields()" required> Cash
+        <input type="radio" name="paymentMethod" value="CreditCard" onclick="togglePaymentFields()"> Credit Card
+        <input type="radio" name="paymentMethod" value="Check" onclick="togglePaymentFields()"> Check
         <br>
 
         <!-- Cash Payment -->
         <div id="cashFields" style="display:none;">
-            <label for="ownerName">Owner Name:</label>
-            <input type="text" name="ownerName" required>
+            <label for="cashOwnerName">Owner Name:</label>
+            <input type="text" name="cashOwnerName">
         </div>
 
         <!-- Credit Card Payment -->
         <div id="creditCardFields" style="display:none;">
-            <label for="ownerName">Owner Name:</label>
-            <input type="text" name="ownerName" required>
+            <label for="cardOwnerName">Owner Name:</label>
+            <input type="text" name="cardOwnerName">
             <br>
             <label for="cardNumber">Card Number:</label>
-            <input type="text" name="cardNumber" required>
+            <input type="text" name="cardNumber">
             <br>
             <label for="expMonth">Exp Month:</label>
-            <input type="text" name="expMonth" required>
+            <input type="number" name="expMonth" min="1" max="12">
             <br>
             <label for="expYear">Exp Year:</label>
-            <input type="text" name="expYear" required>
+            <input type="number" name="expYear" min="2023">
             <br>
             <label for="ccv">CCV:</label>
-            <input type="text" name="ccv" required>
+            <input type="text" name="ccv">
         </div>
 
         <!-- Check Payment -->
         <div id="checkFields" style="display:none;">
             <label for="bankName">Bank Name:</label>
-            <input type="text" name="bankName" required>
+            <input type="text" name="bankName">
             <br>
             <label for="checkDate">Check Date:</label>
-            <input type="date" name="checkDate" required>
+            <input type="date" name="checkDate">
             <br>
             <label for="accountHolderName">Account Holder Name:</label>
-            <input type="text" name="accountHolderName" required>
+            <input type="text" name="accountHolderName">
         </div>
 
         <button type="submit">Submit Order</button>
     </form>
-
-    <script>
-        const paymentMethods = document.querySelectorAll('input[name="paymentMethod"]');
-        paymentMethods.forEach(input => {
-            input.addEventListener('change', function() {
-                document.getElementById('cashFields').style.display = this.value === 'Cash' ? 'block' : 'none';
-                document.getElementById('creditCardFields').style.display = this.value === 'CreditCard' ? 'block' : 'none';
-                document.getElementById('checkFields').style.display = this.value === 'Check' ? 'block' : 'none';
-            });
-        });
-    </script>
 </body>
 </html>

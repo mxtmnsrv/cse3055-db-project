@@ -18,14 +18,16 @@ func main() {
 	http.HandleFunc("/addProduct", addProduct)
 	http.HandleFunc("/addCustomer", addCustomer)
 	http.HandleFunc("/customers", viewCustomers)
+	// !!!
 	http.HandleFunc("/addOrder", addOrder)
+	http.HandleFunc("/orders", viewOrders)
 	fmt.Println("Starting server on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func initDB() {
 	var err error
-	connString := "server=ASUS-TUF-MKSTAK;user id=webAppUser;password=okey123;database=StoreDB;encrypt=disable"
+	connString := "server=ASUS-TUF-MKSTAK;user id=webAppUser;password=123;database=StoreDB;encrypt=disable"
 	shared.DB, err = sql.Open("sqlserver", connString)
 	if err != nil {
 		log.Fatal("Error creating connection pool: ", err.Error())

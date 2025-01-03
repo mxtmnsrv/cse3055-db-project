@@ -25,7 +25,6 @@ type Order struct {
 
 func addOrder(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		// For GET requests, render the order creation form
 		tmpl, err := template.ParseFiles("templates/addOrder.html")
 		if err != nil {
 			http.Error(w, "Error loading template: "+err.Error(), http.StatusInternalServerError)
@@ -36,32 +35,19 @@ func addOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == http.MethodPost {
-		// Handle POST request for creating an order
-
-		// Parse form data
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "Error parsing form data: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		productID, err := strconv.Atoi(r.FormValue("productID"))
+		productID := r.FormValue("productID")
+		quantityStr := r.FormValue("quantity")
+		quantity, err := strconv.Atoi(quantityStr)
 		if err != nil {
-			http.Error(w, "Invalid Product ID: "+err.Error(), http.StatusBadRequest)
+			http.Error(w, "Invalid quantity: "+err.Error(), http.StatusBadRequest)
 			return
 		}
-
-		quantity, err := strconv.Atoi(r.FormValue("quantity"))
-		if err != nil {
-			http.Error(w, "Invalid Quantity: "+err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		customerID, err := strconv.Atoi(r.FormValue("customerID"))
-		if err != nil {
-			http.Error(w, "Invalid Customer ID: "+err.Error(), http.StatusBadRequest)
-			return
-		}
-
+		customerID := r.FormValue("customerID")
 		paymentMethod := r.FormValue("paymentMethod")
 		ownerName := r.FormValue("ownerName")
 		cardNumber := r.FormValue("cardNumber")
@@ -72,69 +58,51 @@ func addOrder(w http.ResponseWriter, r *http.Request) {
 		checkDate := r.FormValue("checkDate")
 		accountHolder := r.FormValue("accountHolderName")
 
-		// Insert the order into the "Order" table
-		orderDate := time.Now().Format("2006-01-02")
-		orderQuery := `
-			INSERT INTO [Order] (OrderDate, CustomerID, EmployeeID) 
-			VALUES (@p1, @p2, @p3)`
-		_, err = shared.DB.Exec(orderQuery, orderDate, customerID, 1) // Assuming EmployeeID is 1 (you can adjust this)
-		if err != nil {
-			http.Error(w, "Error inserting order: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-
 		// Fetch the last inserted OrderID
+		orderDate := time.Now().Format("2006-01-02")
 		var orderID int
-		err = shared.DB.QueryRow("SELECT SCOPE_IDENTITY()").Scan(&orderID)
+		orderQuery := `
+			INSERT INTO [Order] (OrderDate, CustomerID, EmployeeID)
+			OUTPUT INSERTED.OrderID
+			VALUES (@p1, @p2, @p3)
+		`
+		err = shared.DB.QueryRow(orderQuery, orderDate, customerID, 1).Scan(&orderID)
 		if err != nil {
-			http.Error(w, "Error fetching Order ID: "+err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Error inserting order or fetching Order ID: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		// Insert OrderDetail (Product and Quantity)
-		orderDetailQuery := `
-			INSERT INTO OrderDetail (OrderID, ProductID, Quantity) 
-			VALUES (@p1, @p2, @p3)`
-		_, err = shared.DB.Exec(orderDetailQuery, orderID, productID, quantity)
-		if err != nil {
-			http.Error(w, "Error inserting order detail: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		// Insert Payment based on Payment Method
-		paymentDate := time.Now().Format("2006-01-02")
-		paymentQuery := `
-			INSERT INTO Payment (PaymentDate, PaidAmount, PaymentStatus, OrderID)
-			VALUES (@p1, @p2, 'Completed', @p3)`
-		// Assume PaidAmount = quantity * price (price should be fetched from the product table)
+		// Fetch the product price
 		var price float64
 		err = shared.DB.QueryRow("SELECT Price FROM Product WHERE ProductID = @p1", productID).Scan(&price)
 		if err != nil {
 			http.Error(w, "Error fetching product price: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		// Calculate the payment amount
 		paidAmount := price * float64(quantity)
 
-		_, err = shared.DB.Exec(paymentQuery, paymentDate, paidAmount, orderID)
+		// Insert Payment
+		paymentDate := time.Now().Format("2006-01-02")
+		var paymentID int
+		paymentQuery := "INSERT INTO Payment (PaymentDate, PaidAmount, PaymentStatus, OrderID) OUTPUT INSERTED.PaymentID VALUES (@p1, @p2, 'Completed', @p3)"
+		err = shared.DB.QueryRow(paymentQuery, paymentDate, paidAmount, orderID).Scan(&paymentID)
 		if err != nil {
 			http.Error(w, "Error inserting payment: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		// Now insert payment details based on the payment method
+		// Insert Payment Details based on Payment Method
 		if paymentMethod == "Cash" {
-			query := "INSERT INTO Cash (PaymentID, OwnerName) VALUES (SCOPE_IDENTITY(), @p1)"
-			_, err = shared.DB.Exec(query, ownerName)
+			query := "INSERT INTO Cash (PaymentID, OwnerName) VALUES (@p1, @p2)"
+			_, err = shared.DB.Exec(query, paymentID, ownerName)
 		} else if paymentMethod == "CreditCard" {
-			query := `
-				INSERT INTO CreditCard (PaymentID, OwnerName, CardNumber, ExpMonth, ExpYear, CCV)
-				VALUES (SCOPE_IDENTITY(), @p1, @p2, @p3, @p4, @p5)`
-			_, err = shared.DB.Exec(query, ownerName, cardNumber, expMonth, expYear, ccv)
+			query := "INSERT INTO CreditCard (PaymentID, OwnerName, CardNumber, ExpMonth, ExpYear, CCV) VALUES (@p1, @p2, @p3, @p4, @p5, @p6)"
+			_, err = shared.DB.Exec(query, paymentID, ownerName, cardNumber, expMonth, expYear, ccv)
 		} else if paymentMethod == "Check" {
-			query := `
-				INSERT INTO [Check] (PaymentID, BankName, CheckDate, AccountHolderName)
-				VALUES (SCOPE_IDENTITY(), @p1, @p2, @p3)`
-			_, err = shared.DB.Exec(query, bankName, checkDate, accountHolder)
+			query := "INSERT INTO [Check] (PaymentID, BankName, CheckDate, AccountHolderName) VALUES (@p1, @p2, @p3, @p4)"
+			_, err = shared.DB.Exec(query, paymentID, bankName, checkDate, accountHolder)
 		}
 
 		if err != nil {
@@ -142,7 +110,7 @@ func addOrder(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Redirect to the orders page or success message
+		// Redirect to orders page
 		http.Redirect(w, r, "/orders", http.StatusSeeOther)
 	}
 }
