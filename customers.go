@@ -59,13 +59,13 @@ func addCustomer(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodPost {
 		r.ParseForm()
-		customerID := r.FormValue("customerID")
+		customerID := r.FormValue("customerID") // Get CustomerID from form
 		phoneNumber := r.FormValue("phoneNumber")
 		emailAddress := r.FormValue("emailAddress")
 		customerType := r.FormValue("customerType")
 
 		// Insert into Customer table
-		query := "INSERT INTO Customer (CustomerID, PhoneNumber, EmailAddress, CustomerType) OUTPUT INSERTED.CustomerID VALUES (@p1, @p2, @p3, @p4)"
+		query := "INSERT INTO Customer (CustomerID, PhoneNumber, EmailAddress, CustomerType) VALUES (@p1, @p2, @p3, @p4)"
 		_, err := shared.DB.Exec(query, customerID, phoneNumber, emailAddress, customerType)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
