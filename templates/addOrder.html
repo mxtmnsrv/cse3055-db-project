@@ -1,25 +1,77 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Add Order</title>
+    <title>Create Order</title>
 </head>
 <body>
-    <h1>Add Order</h1>
-    <form method="POST" action="/addOrder">
-        <label for="orderDate">Order Date:</label>
-        <input type="date" id="orderDate" name="orderDate" required><br><br>
+    <h1>Create Order</h1>
+    <form action="/addOrder" method="POST">
+        <label for="productID">Product ID:</label>
+        <input type="text" name="productID" id="productID" required>
+        <br>
 
-        <label for="orderNote">Order Note:</label>
-        <textarea id="orderNote" name="orderNote"></textarea><br><br>
+        <label for="quantity">Quantity:</label>
+        <input type="number" id="quantity" name="quantity" required min="1" value="1">
+        <br>
 
-        <label for="customerID">Customer:</label>
-        <select id="customerID" name="customerID" required>
-            {{range .}}
-            <option value="{{.CustomerID}}">{{.CustomerID}}</option>
-            {{end}}
-        </select><br><br>
+        <label for="customerID">Customer ID:</label>
+        <input type="text" id="customerID" name="customerID" required>
+        <br>
 
-        <button type="submit">Add Order</button>
+        <label>Payment Method:</label>
+        <input type="radio" name="paymentMethod" value="Cash" required> Cash
+        <input type="radio" name="paymentMethod" value="CreditCard"> Credit Card
+        <input type="radio" name="paymentMethod" value="Check"> Check
+        <br>
+
+        <!-- Cash Payment -->
+        <div id="cashFields" style="display:none;">
+            <label for="ownerName">Owner Name:</label>
+            <input type="text" name="ownerName" required>
+        </div>
+
+        <!-- Credit Card Payment -->
+        <div id="creditCardFields" style="display:none;">
+            <label for="ownerName">Owner Name:</label>
+            <input type="text" name="ownerName" required>
+            <br>
+            <label for="cardNumber">Card Number:</label>
+            <input type="text" name="cardNumber" required>
+            <br>
+            <label for="expMonth">Exp Month:</label>
+            <input type="text" name="expMonth" required>
+            <br>
+            <label for="expYear">Exp Year:</label>
+            <input type="text" name="expYear" required>
+            <br>
+            <label for="ccv">CCV:</label>
+            <input type="text" name="ccv" required>
+        </div>
+
+        <!-- Check Payment -->
+        <div id="checkFields" style="display:none;">
+            <label for="bankName">Bank Name:</label>
+            <input type="text" name="bankName" required>
+            <br>
+            <label for="checkDate">Check Date:</label>
+            <input type="date" name="checkDate" required>
+            <br>
+            <label for="accountHolderName">Account Holder Name:</label>
+            <input type="text" name="accountHolderName" required>
+        </div>
+
+        <button type="submit">Submit Order</button>
     </form>
+
+    <script>
+        const paymentMethods = document.querySelectorAll('input[name="paymentMethod"]');
+        paymentMethods.forEach(input => {
+            input.addEventListener('change', function() {
+                document.getElementById('cashFields').style.display = this.value === 'Cash' ? 'block' : 'none';
+                document.getElementById('creditCardFields').style.display = this.value === 'CreditCard' ? 'block' : 'none';
+                document.getElementById('checkFields').style.display = this.value === 'Check' ? 'block' : 'none';
+            });
+        });
+    </script>
 </body>
 </html>

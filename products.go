@@ -45,15 +45,15 @@ func addProduct(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodPost {
 		r.ParseForm()
-		productID := r.FormValue("productID")
+		// productID := r.FormValue("productID")
 		name := r.FormValue("name")
 		category := r.FormValue("category")
 		price := r.FormValue("price")
 		description := r.FormValue("description")
 
 		// SQL query to insert product
-		query := "INSERT INTO Product (ProductID, Name, Category, Price, Description) VALUES (@p1, @p2, @p3, @p4, @p5)"
-		_, err := shared.DB.Exec(query, productID, name, category, price, description)
+		query := "INSERT INTO Product (Name, Category, Price, Description) VALUES (@p1, @p2, @p3, @p4)"
+		_, err := shared.DB.Exec(query, name, category, price, description)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
