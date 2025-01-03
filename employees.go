@@ -49,7 +49,8 @@ func addOrder(w http.ResponseWriter, r *http.Request) {
 		}
 		customerID := r.FormValue("customerID")
 		paymentMethod := r.FormValue("paymentMethod")
-		ownerName := r.FormValue("ownerName")
+		cashOwnerName := r.FormValue("cashOwnerName")
+		cardOwnerName := r.FormValue("cardOwnerName")
 		cardNumber := r.FormValue("cardNumber")
 		expMonth := r.FormValue("expMonth")
 		expYear := r.FormValue("expYear")
@@ -96,10 +97,10 @@ func addOrder(w http.ResponseWriter, r *http.Request) {
 		// Insert Payment Details based on Payment Method
 		if paymentMethod == "Cash" {
 			query := "INSERT INTO Cash (PaymentID, OwnerName) VALUES (@p1, @p2)"
-			_, err = shared.DB.Exec(query, paymentID, ownerName)
+			_, err = shared.DB.Exec(query, paymentID, cashOwnerName)
 		} else if paymentMethod == "CreditCard" {
 			query := "INSERT INTO CreditCard (PaymentID, OwnerName, CardNumber, ExpMonth, ExpYear, CCV) VALUES (@p1, @p2, @p3, @p4, @p5, @p6)"
-			_, err = shared.DB.Exec(query, paymentID, ownerName, cardNumber, expMonth, expYear, ccv)
+			_, err = shared.DB.Exec(query, paymentID, cardOwnerName, cardNumber, expMonth, expYear, ccv)
 		} else if paymentMethod == "Check" {
 			query := "INSERT INTO [Check] (PaymentID, BankName, CheckDate, AccountHolderName) VALUES (@p1, @p2, @p3, @p4)"
 			_, err = shared.DB.Exec(query, paymentID, bankName, checkDate, accountHolder)
