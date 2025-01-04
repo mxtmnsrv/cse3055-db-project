@@ -33,6 +33,75 @@ type Order struct {
 	AccountHolder string
 }
 
+// Distribution Agent
+func setLogisticsToOrder(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		orderID := r.FormValue("orderID")
+		employeeID := r.FormValue("employeeID")
+
+		// Insert a new logistics record and use OUTPUT to get the LogisticsID
+		insertLogisticsQuery := `
+			INSERT INTO Logistics (Date, EmployeeID)
+			OUTPUT INSERTED.LogisticsID
+			VALUES (GETDATE(), @p1)
+		`
+
+		// Execute the insert query and retrieve the LogisticsID using OUTPUT
+		var logisticsID int64
+		err := shared.DB.QueryRow(insertLogisticsQuery, employeeID).Scan(&logisticsID)
+		if err != nil {
+			http.Error(w, "Error inserting logistics record: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Update the order with the new LogisticsID
+		updateOrderQuery := `
+			UPDATE [Order]
+			SET LogisticsID = @p1
+			WHERE OrderID = @p2
+		`
+
+		_, err = shared.DB.Exec(updateOrderQuery, logisticsID, orderID)
+		if err != nil {
+			http.Error(w, "Error updating order with logistics ID: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Redirect or show a success message
+		http.Redirect(w, r, "/orders", http.StatusSeeOther)
+	}
+
+	// Get all orders with NULL LogisticsID
+	rows, err := shared.DB.Query(`
+        SELECT OrderID, OrderDate, OrderNote, CustomerID, LogisticsID, EmployeeID
+        FROM [Order]
+        WHERE LogisticsID IS NULL
+    `)
+	if err != nil {
+		http.Error(w, "Error fetching orders: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var orders []Ordero
+	for rows.Next() {
+		var order Ordero
+		if err := rows.Scan(&order.OrderID, &order.OrderDate, &order.OrderNote, &order.CustomerID, &order.LogisticsID, &order.EmployeeID); err != nil {
+			http.Error(w, "Error scanning order data: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		orders = append(orders, order)
+	}
+
+	tmpl, err := template.ParseFiles("templates/setLogistics.html")
+	if err != nil {
+		http.Error(w, "Error loading template: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tmpl.Execute(w, orders)
+}
+
+// Field Marketer
 func addOrder(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		tmpl, err := template.ParseFiles("templates/addOrder.html")

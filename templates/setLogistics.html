@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set Logistics</title>
+</head>
+<body>
+    <h1>Orders with Null Logistics ID</h1>
+    <table border="1">
+        <tr>
+            <th>Order ID</th>
+            <th>Order Date</th>
+            <th>Order Note</th>
+            <th>Customer ID</th>
+            <th>Logistics ID</th>
+            <th>Employee ID</th>
+        </tr>
+        {{range .}}
+        <tr>
+            <td>{{.OrderID}}</td>
+            <td>{{.OrderDate}}</td>
+            <td>{{.OrderNote}}</td>
+            <td>{{.CustomerID}}</td>
+            <td>{{.LogisticsID}}</td>
+            <td>{{.EmployeeID}}</td>
+        </tr>
+        {{end}}
+    </table>
+
+    <h2>Assign Logistics to an Order</h2>
+    <form action="/setLogistics" method="POST">
+        <label for="orderID">Order ID:</label>
+        <input type="text" id="orderID" name="orderID" required>
+        <br>
+        <label for="employeeID">Employee ID:</label>
+        <input type="text" id="employeeID" name="employeeID" required>
+        <br>
+        <button type="submit">Assign Logistics</button>
+    </form>
+
+</body>
+</html>
