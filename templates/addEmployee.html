@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Employee</title>
+    <script>
+        function toggleFields() {
+            const role = document.querySelector('input[name="role"]:checked').value;
+            const allFields = document.querySelectorAll('.roleFields');
+            allFields.forEach(field => field.style.display = 'none');
+            document.getElementById(role + 'Fields').style.display = 'block';
+        }
+    </script>
+</head>
+<body>
+    <h1>Add Employee</h1>
+    <form action="/addEmployee" method="POST">
+        <label for="employeeID">Employee ID:</label>
+        <input type="text" id="employeeID" name="employeeID" required>
+        <br>
+        <label for="firstName">First Name:</label>
+        <input type="text" id="firstName" name="firstName" required>
+        <br>
+        <label for="lastName">Last Name:</label>
+        <input type="text" id="lastName" name="lastName" required>
+        <br>
+        <label for="salary">Salary:</label>
+        <input type="number" id="salary" name="salary" required min="0">
+        <br>
+        <label for="phoneNumber">Phone Number:</label>
+        <input type="text" id="phoneNumber" name="phoneNumber" required>
+        <br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        <br>
+        <label>Role:</label>
+        <input type="radio" name="role" value="Manager" onclick="toggleFields()" required> Manager
+        <input type="radio" name="role" value="Supervisor" onclick="toggleFields()"> Supervisor
+        <input type="radio" name="role" value="SalesRepresentative" onclick="toggleFields()"> Sales Representative
+        <input type="radio" name="role" value="Cashier" onclick="toggleFields()"> Cashier
+        <input type="radio" name="role" value="FieldMarketer" onclick="toggleFields()"> Field Marketer
+        <input type="radio" name="role" value="Accountant" onclick="toggleFields()"> Accountant
+        <input type="radio" name="role" value="DistributionAgent" onclick="toggleFields()"> Distribution Agent
+        <br>
+
+        <!-- Manager Fields -->
+        <div id="ManagerFields" class="roleFields" style="display:none;">
+            <label for="teamSize">Team Size:</label>
+            <input type="number" id="teamSize" name="teamSize" min="0">
+        </div>
+
+        <!-- Supervisor Fields -->
+        <div id="SupervisorFields" class="roleFields" style="display:none;">
+            <label for="managerID">Manager ID:</label>
+            <input type="text" id="managerID" name="managerID">
+            <br>
+            <label for="supervisorTeamSize">Team Size:</label>
+            <input type="number" id="supervisorTeamSize" name="supervisorTeamSize" min="0">
+        </div>
+
+        <!-- Sales Representative Fields -->
+        <div id="SalesRepresentativeFields" class="roleFields" style="display:none;">
+            <label for="shiftDuration">Shift Duration (hours):</label>
+            <input type="number" id="shiftDuration" name="shiftDuration" min="0">
+            <br>
+            <label for="supervisorEmpID">Supervisor Employee ID:</label>
+            <input type="text" id="supervisorEmpID" name="supervisorEmpID">
+        </div>
+
+        <!-- Cashier Fields -->
+        <div id="CashierFields" class="roleFields" style="display:none;">
+            <label for="cashierShiftDuration">Shift Duration (hours):</label>
+            <input type="number" id="cashierShiftDuration" name="cashierShiftDuration" min="0">
+            <br>
+            <label for="supervisorID">Supervisor ID:</label>
+            <input type="text" id="supervisorID" name="supervisorID">
+        </div>
+
+        <!-- Field Marketer Fields -->
+        <div id="FieldMarketerFields" class="roleFields" style="display:none;">
+            <label for="marketingArea">Marketing Area:</label>
+            <input type="text" id="marketingArea" name="marketingArea">
+        </div>
+
+        <!-- Accountant Fields -->
+        <div id="AccountantFields" class="roleFields" style="display:none;">
+            <label for="accountingField">Accounting Field:</label>
+            <input type="text" id="accountingField" name="accountingField">
+        </div>
+
+        <!-- Distribution Agent Fields -->
+        <div id="DistributionAgentFields" class="roleFields" style="display:none;">
+            <label for="deliveryVehicle">Delivery Vehicle:</label>
+            <input type="text" id="deliveryVehicle" name="deliveryVehicle">
+        </div>
+
+        <button type="submit">Add Employee</button>
+    </form>
+</body>
+</html>
