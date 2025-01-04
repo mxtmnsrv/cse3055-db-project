@@ -98,8 +98,43 @@ func setLogisticsToOrder(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Fetch order details to get ProductID and Quantity
+		orderDetailsQuery := `
+			SELECT ProductID, Quantity
+			FROM OrderDetail
+			WHERE OrderID = @p1
+		`
+
+		var productID int
+		var quantity int
+		err = shared.DB.QueryRow(orderDetailsQuery, orderID).Scan(&productID, &quantity)
+		if err != nil {
+			http.Error(w, "Error fetching order details: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Deduct quantity from WarehouseProduct for this ProductID
+		updateWarehouseQuery := `
+			UPDATE WarehouseProduct
+			SET Quantity = Quantity - @p1
+			WHERE ProductID = @p2 AND Quantity >= @p1
+		`
+
+		result, err := shared.DB.Exec(updateWarehouseQuery, quantity, productID)
+		if err != nil {
+			http.Error(w, "Error updating warehouse product quantity: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		rowsAffected, _ := result.RowsAffected()
+		if rowsAffected == 0 {
+			http.Error(w, "Insufficient stock for ProductID: "+strconv.Itoa(productID), http.StatusBadRequest)
+			return
+		}
+
 		// Redirect or show a success message
 		http.Redirect(w, r, "/orders", http.StatusSeeOther)
+		return
 	}
 
 	// Get all orders with NULL LogisticsID
@@ -168,6 +203,20 @@ func addOrder(w http.ResponseWriter, r *http.Request) {
 		bankName := r.FormValue("bankName")
 		checkDate := r.FormValue("checkDate")
 		accountHolder := r.FormValue("accountHolderName")
+
+		// Check if the product exists in a warehouse with sufficient quantity
+		var availableQuantity int
+		checkQuery := `
+			SELECT SUM(Quantity) 
+			FROM WarehouseProduct 
+			WHERE ProductID = @p1
+			GROUP BY ProductID
+		`
+		err = shared.DB.QueryRow(checkQuery, productID).Scan(&availableQuantity)
+		if err != nil || availableQuantity < quantity {
+			http.Error(w, "Product out of stock or insufficient quantity in warehouses", http.StatusBadRequest)
+			return
+		}
 
 		// Fetch the last inserted OrderID
 		orderDate := time.Now().Format("2006-01-02")

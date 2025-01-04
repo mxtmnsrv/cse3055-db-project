@@ -25,6 +25,10 @@ func main() {
 	http.HandleFunc("/setLogistics", setLogisticsToOrder)
 	http.HandleFunc("/addProductToWarehouse", addProductToWarehouse)
 	http.HandleFunc("/viewProductsInWarehouse", viewProductsInWarehouse)
+
+	http.HandleFunc("/supervisorPage", supervisorPage)
+	http.HandleFunc("/managerPage", managerPage)
+
 	fmt.Println("Starting server on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
@@ -50,17 +54,47 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Simple username/password check
 	if r.Method == http.MethodPost {
 		r.ParseForm()
-		username := r.FormValue("username")
+		employeeID := r.FormValue("employeeID")
 		password := r.FormValue("password")
 
-		// Replace with actual authentication logic
-		if username == "manager" && password == "123" {
-			http.Redirect(w, r, "/products", http.StatusSeeOther)
-		} else {
+		var role string
+		// Query to get the role of the employee
+		query := `SELECT Role FROM Employee WHERE EmployeeID = @p1 AND Password = @p2`
+		err := shared.DB.QueryRow(query, employeeID, password).Scan(&role)
+		if err != nil {
 			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+			return
+		}
+
+		// Redirect based on the role
+		if role == "Supervisor" {
+			http.Redirect(w, r, "/supervisorPage", http.StatusSeeOther)
+		} else if role == "Manager" {
+			http.Redirect(w, r, "/managerPage", http.StatusSeeOther)
+		} else {
+			http.Error(w, "Access Denied", http.StatusForbidden)
 		}
 	}
+}
+
+func supervisorPage(w http.ResponseWriter, r *http.Request) {
+	// Check if user is authenticated (you can use sessions/cookies for actual authentication)
+	tmpl, err := template.ParseFiles("templates/supervisorPage.html")
+	if err != nil {
+		http.Error(w, "Error loading supervisor page template: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tmpl.Execute(w, nil)
+}
+
+func managerPage(w http.ResponseWriter, r *http.Request) {
+	// Check if user is authenticated (you can use sessions/cookies for actual authentication)
+	tmpl, err := template.ParseFiles("templates/managerPage.html")
+	if err != nil {
+		http.Error(w, "Error loading manager page template: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tmpl.Execute(w, nil)
 }
