@@ -499,11 +499,33 @@ func addEmployee(w http.ResponseWriter, r *http.Request) {
 		phoneNumber := r.FormValue("phoneNumber")
 		password := r.FormValue("password")
 		role := r.FormValue("role")
+		departmentID := r.FormValue("departmentID")
 
-		query := "INSERT INTO Employee (EmployeeID, FirstName, LastName, Salary, PhoneNumber, Password, Role) VALUES (@p1, @p2, @p3, @p4, @p5, @p6, @p7)"
-		_, err := shared.DB.Exec(query, employeeID, firstName, lastName, salary, phoneNumber, password, role)
+		// Check if department exists
+		var departmentExists bool
+		query := "SELECT COUNT(*) FROM Department WHERE DepartmentID = @p1"
+		err := shared.DB.QueryRow(query, departmentID).Scan(&departmentExists)
+		if err != nil {
+			http.Error(w, "Error checking department: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if !departmentExists {
+			http.Error(w, "Department not found", http.StatusBadRequest)
+			return
+		}
+
+		query = "INSERT INTO Employee (EmployeeID, FirstName, LastName, Salary, PhoneNumber, Password, Role) VALUES (@p1, @p2, @p3, @p4, @p5, @p6, @p7)"
+		_, err = shared.DB.Exec(query, employeeID, firstName, lastName, salary, phoneNumber, password, role)
 		if err != nil {
 			http.Error(w, "Error inserting employee: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Insert into BelongsTo table to associate the employee with a department
+		query = "INSERT INTO BelongsTo (EmployeeID, DepartmentID) VALUES (@p1, @p2)"
+		_, err = shared.DB.Exec(query, employeeID, departmentID)
+		if err != nil {
+			http.Error(w, "Error assigning department: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
