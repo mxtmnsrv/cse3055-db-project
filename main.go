@@ -25,12 +25,15 @@ func main() {
 	http.HandleFunc("/setLogistics", setLogisticsToOrder)
 	http.HandleFunc("/addProductToWarehouse", addProductToWarehouse)
 	http.HandleFunc("/viewProductsInWarehouse", viewProductsInWarehouse)
+	http.HandleFunc("/createInvoice", createInvoice)
+	http.HandleFunc("/invoices", viewInvoices)
 
 	http.HandleFunc("/supervisorPage", supervisorPage)
 	http.HandleFunc("/managerPage", managerPage)
 	http.HandleFunc("/fieldMarketerPage", fieldMarketerPage)
 	http.HandleFunc("/distributionAgentPage", distributionAgentPage)
 	http.HandleFunc("/salesRepPage", salesRepPage)
+	http.HandleFunc("/accountantPage", accountantPage)
 
 	fmt.Println("Starting server on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
@@ -38,7 +41,7 @@ func main() {
 
 func initDB() {
 	var err error
-	connString := "server=ASUS-TUF-MKSTAK;user id=webAppUser;password=123;database=StoreDB;encrypt=disable"
+	connString := "server=ASUS-TUF-MKSTAK;user id=webAppUser;password=123;database=ConstructionStoreDB;encrypt=disable"
 	shared.DB, err = sql.Open("sqlserver", connString)
 	if err != nil {
 		log.Fatal("Error creating connection pool: ", err.Error())
@@ -84,8 +87,6 @@ func login(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/distributionAgentPage", http.StatusSeeOther)
 		} else if role == "Accountant" {
 			http.Redirect(w, r, "/accountantPage", http.StatusSeeOther)
-		} else if role == "Cashier" {
-			http.Redirect(w, r, "/cashierPage", http.StatusSeeOther)
 		} else {
 			http.Error(w, "Access Denied", http.StatusForbidden)
 		}
@@ -139,15 +140,6 @@ func salesRepPage(w http.ResponseWriter, r *http.Request) {
 
 func accountantPage(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.ParseFiles("templates/accountantPage.html")
-	if err != nil {
-		http.Error(w, "Error loading manager page template: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-	tmpl.Execute(w, nil)
-}
-
-func cashierPage(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles("templates/cashierPage.html")
 	if err != nil {
 		http.Error(w, "Error loading manager page template: "+err.Error(), http.StatusInternalServerError)
 		return

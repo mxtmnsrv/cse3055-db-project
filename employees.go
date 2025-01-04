@@ -33,6 +33,121 @@ type Order struct {
 	AccountHolder string
 }
 
+// Accountant
+func viewInvoices(w http.ResponseWriter, r *http.Request) {
+	// Query to get all invoices
+	rows, err := shared.DB.Query("SELECT InvoiceID, InvoiceDate, TotalAmount, OrderID FROM Invoice")
+	if err != nil {
+		http.Error(w, "Error fetching invoices: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var invoices []struct {
+		InvoiceID   int
+		InvoiceDate string
+		TotalAmount float64
+		OrderID     int
+	}
+
+	// Populate the slice with data
+	for rows.Next() {
+		var invoice struct {
+			InvoiceID   int
+			InvoiceDate string
+			TotalAmount float64
+			OrderID     int
+		}
+		if err := rows.Scan(&invoice.InvoiceID, &invoice.InvoiceDate, &invoice.TotalAmount, &invoice.OrderID); err != nil {
+			http.Error(w, "Error scanning invoice: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		invoices = append(invoices, invoice)
+	}
+
+	// Handle any error that occurred during iteration
+	if err := rows.Err(); err != nil {
+		http.Error(w, "Error iterating over rows: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Parse and render the template
+	tmpl, err := template.ParseFiles("templates/invoices.html")
+	if err != nil {
+		http.Error(w, "Error loading invoices template: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tmpl.Execute(w, invoices)
+}
+
+func createInvoice(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		// Render the form to create an invoice
+		tmpl, err := template.ParseFiles("templates/createInvoice.html")
+		if err != nil {
+			http.Error(w, "Error parsing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		tmpl.Execute(w, nil)
+		return
+	}
+
+	if r.Method == http.MethodPost {
+		// Parse the form data
+		r.ParseForm()
+		orderID := r.FormValue("orderID")
+
+		// Calculate total amount based on OrderDetail
+		var totalAmount float64
+
+		// Query to get product details and quantity from OrderDetail
+		query := `
+			SELECT od.Quantity, p.Price
+			FROM OrderDetail od
+			JOIN Product p ON od.ProductID = p.ProductID
+			WHERE od.OrderID = @p1
+		`
+		rows, err := shared.DB.Query(query, orderID)
+		if err != nil {
+			http.Error(w, "Error fetching order details: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var quantity int
+			var price float64
+			err := rows.Scan(&quantity, &price)
+			if err != nil {
+				http.Error(w, "Error scanning order details: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+			// Calculate total amount
+			totalAmount += float64(quantity) * price
+		}
+
+		// If no rows are returned, that means the order doesn't have any details.
+		if totalAmount == 0 {
+			http.Error(w, "No order details found for this OrderID", http.StatusBadRequest)
+			return
+		}
+
+		// Insert new invoice record
+		insertQuery := `
+			INSERT INTO Invoice (InvoiceDate, TotalAmount, OrderID)
+			VALUES (GETDATE(), @p1, @p2)
+		`
+		_, err = shared.DB.Exec(insertQuery, totalAmount, orderID)
+		if err != nil {
+			http.Error(w, "Error inserting invoice: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Redirect to a page that shows the success or list of invoices
+		http.Redirect(w, r, "/invoices", http.StatusSeeOther)
+	}
+}
+
 // Supervisor
 func addProductToWarehouse(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
@@ -52,12 +167,33 @@ func addProductToWarehouse(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// SQL query to insert product
-		query := "INSERT INTO WarehouseProduct (WarehouseID, ProductID, Quantity) VALUES (@p1, @p2, @p3)"
-		_, err = shared.DB.Exec(query, warehouseID, productID, quantity)
+		// Check if the product already exists in the warehouse
+		var existingQuantity int
+		query := `SELECT Quantity FROM WarehouseProduct WHERE WarehouseID = @p1 AND ProductID = @p2`
+		err = shared.DB.QueryRow(query, warehouseID, productID).Scan(&existingQuantity)
+
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			if err.Error() == "sql: no rows in result set" {
+				// If no row is found, insert a new record
+				insertQuery := `INSERT INTO WarehouseProduct (WarehouseID, ProductID, Quantity) VALUES (@p1, @p2, @p3)`
+				_, err = shared.DB.Exec(insertQuery, warehouseID, productID, quantity)
+				if err != nil {
+					http.Error(w, "Error inserting product: "+err.Error(), http.StatusInternalServerError)
+					return
+				}
+			} else {
+				// If some other error occurs
+				http.Error(w, "Error checking existing product: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+		} else {
+			// If the product exists, update the quantity
+			updateQuery := `UPDATE WarehouseProduct SET Quantity = @p1 WHERE WarehouseID = @p2 AND ProductID = @p3`
+			_, err = shared.DB.Exec(updateQuery, existingQuantity+quantity, warehouseID, productID)
+			if err != nil {
+				http.Error(w, "Error updating product: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
 		}
 
 		http.Redirect(w, r, "/products", http.StatusSeeOther)
