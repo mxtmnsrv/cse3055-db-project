@@ -28,6 +28,9 @@ func main() {
 
 	http.HandleFunc("/supervisorPage", supervisorPage)
 	http.HandleFunc("/managerPage", managerPage)
+	http.HandleFunc("/fieldMarketerPage", fieldMarketerPage)
+	http.HandleFunc("/distributionAgentPage", distributionAgentPage)
+	http.HandleFunc("/salesRepPage", salesRepPage)
 
 	fmt.Println("Starting server on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
@@ -73,6 +76,16 @@ func login(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/supervisorPage", http.StatusSeeOther)
 		} else if role == "Manager" {
 			http.Redirect(w, r, "/managerPage", http.StatusSeeOther)
+		} else if role == "Field Marketer" {
+			http.Redirect(w, r, "/fieldMarketerPage", http.StatusSeeOther)
+		} else if role == "Sales Representative" {
+			http.Redirect(w, r, "/salesRepPage", http.StatusSeeOther)
+		} else if role == "Distribution Agent" {
+			http.Redirect(w, r, "/distributionAgentPage", http.StatusSeeOther)
+		} else if role == "Accountant" {
+			http.Redirect(w, r, "/accountantPage", http.StatusSeeOther)
+		} else if role == "Cashier" {
+			http.Redirect(w, r, "/cashierPage", http.StatusSeeOther)
 		} else {
 			http.Error(w, "Access Denied", http.StatusForbidden)
 		}
@@ -80,7 +93,6 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func supervisorPage(w http.ResponseWriter, r *http.Request) {
-	// Check if user is authenticated (you can use sessions/cookies for actual authentication)
 	tmpl, err := template.ParseFiles("templates/supervisorPage.html")
 	if err != nil {
 		http.Error(w, "Error loading supervisor page template: "+err.Error(), http.StatusInternalServerError)
@@ -90,8 +102,52 @@ func supervisorPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func managerPage(w http.ResponseWriter, r *http.Request) {
-	// Check if user is authenticated (you can use sessions/cookies for actual authentication)
 	tmpl, err := template.ParseFiles("templates/managerPage.html")
+	if err != nil {
+		http.Error(w, "Error loading manager page template: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tmpl.Execute(w, nil)
+}
+
+func fieldMarketerPage(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFiles("templates/fieldMarketerPage.html")
+	if err != nil {
+		http.Error(w, "Error loading manager page template: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tmpl.Execute(w, nil)
+}
+
+func distributionAgentPage(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFiles("templates/distributionAgentPage.html")
+	if err != nil {
+		http.Error(w, "Error loading manager page template: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tmpl.Execute(w, nil)
+}
+
+func salesRepPage(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFiles("templates/salesRepPage.html")
+	if err != nil {
+		http.Error(w, "Error loading manager page template: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tmpl.Execute(w, nil)
+}
+
+func accountantPage(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFiles("templates/accountantPage.html")
+	if err != nil {
+		http.Error(w, "Error loading manager page template: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tmpl.Execute(w, nil)
+}
+
+func cashierPage(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFiles("templates/cashierPage.html")
 	if err != nil {
 		http.Error(w, "Error loading manager page template: "+err.Error(), http.StatusInternalServerError)
 		return
