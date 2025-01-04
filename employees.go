@@ -225,15 +225,15 @@ func addEmployee(w http.ResponseWriter, r *http.Request) {
 
 		case "SalesRepresentative":
 			shiftDuration := r.FormValue("shiftDuration")
-			supervisorEmpID := r.FormValue("supervisorEmpID")
+			supervisorID := r.FormValue("supervisorID")
 			query = "INSERT INTO SalesRepresentative (EmployeeID, ShiftDuration, SupervisorID) VALUES (@p1, @p2, @p3)"
-			_, err = shared.DB.Exec(query, employeeID, shiftDuration, supervisorEmpID)
+			_, err = shared.DB.Exec(query, employeeID, shiftDuration, supervisorID)
 
 		case "Cashier":
-			shiftDuration := r.FormValue("cashierShiftDuration")
-			supervisorID := r.FormValue("supervisorID")
+			cashierShiftDuration := r.FormValue("cashierShiftDuration")
+			csupervisorID := r.FormValue("csupervisorID")
 			query = "INSERT INTO Cashier (EmployeeID, ShiftDuration, SupervisorID) VALUES (@p1, @p2, @p3)"
-			_, err = shared.DB.Exec(query, employeeID, shiftDuration, supervisorID)
+			_, err = shared.DB.Exec(query, employeeID, cashierShiftDuration, csupervisorID)
 
 		case "FieldMarketer":
 			marketingArea := r.FormValue("marketingArea")
