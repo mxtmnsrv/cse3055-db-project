@@ -33,6 +33,37 @@ type Order struct {
 	AccountHolder string
 }
 
+// Supervisor
+func addProductToWarehouse(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		tmpl, _ := template.ParseFiles("templates/addProductToWarehouse.html")
+		tmpl.Execute(w, nil)
+		return
+	}
+
+	if r.Method == http.MethodPost {
+		r.ParseForm()
+		productID := r.FormValue("productID")
+		warehouseID := r.FormValue("warehouseID")
+		quantityStr := r.FormValue("quantity")
+		quantity, err := strconv.Atoi(quantityStr)
+		if err != nil {
+			http.Error(w, "Invalid quantity: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		// SQL query to insert product
+		query := "INSERT INTO WarehouseProduct (WarehouseID, ProductID, Quantity) VALUES (@p1, @p2, @p3)"
+		_, err = shared.DB.Exec(query, warehouseID, productID, quantity)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		http.Redirect(w, r, "/products", http.StatusSeeOther)
+	}
+}
+
 // Distribution Agent
 func setLogisticsToOrder(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
@@ -162,6 +193,17 @@ func addOrder(w http.ResponseWriter, r *http.Request) {
 
 		// Calculate the payment amount
 		paidAmount := price * float64(quantity)
+
+		// Insert the order detail
+		orderDetailQuery := `
+            INSERT INTO OrderDetail (OrderID, ProductID, Quantity)
+            VALUES (@p1, @p2, @p3)
+        `
+		_, err = shared.DB.Exec(orderDetailQuery, orderID, productID, quantity)
+		if err != nil {
+			http.Error(w, "Error inserting order detail: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 		// Insert Payment
 		paymentDate := time.Now().Format("2006-01-02")

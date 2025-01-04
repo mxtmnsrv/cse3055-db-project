@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warehouse Products</title>
+</head>
+<body>
+    <h1>Warehouse Products</h1>
+    <form method="POST" action="/viewProductsInWarehouse">
+        <label for="location">Select Warehouse by Location:</label>
+        <select id="location" name="location" required>
+            {{range .Warehouses}}
+            <option value="{{.Location}}">{{.Location}} (ID: {{.WarehouseID}})</option>
+            {{end}}
+        </select>
+        <button type="submit">View Products</button>
+    </form>
+    <br>
+    <h2>Products</h2>
+    <table border="1">
+        <tr>
+            <th>Product ID</th>
+            <th>Name</th>
+            <th>Quantity</th>
+        </tr>
+        {{range .Products}}
+        <tr>
+            <td>{{.ProductID}}</td>
+            <td>{{.Name}}</td>
+            <td>{{.Quantity}}</td>
+        </tr>
+        {{end}}
+    </table>
+</body>
+</html>
